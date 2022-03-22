@@ -54,7 +54,7 @@ def main_phi(freq, h_tx, h_rx, plot=False, export=False):
         fig, axs = plt.subplots()
         axs.semilogx(distance, d_phi)
     if export:
-        LOGGER.info("Exporting delta phi results.")
+        LOGGER.debug("Exporting delta phi results.")
         export_results(results, f"delta_phi-{freq:E}-t{h_tx:.1f}-r{h_rx:.1f}.dat")
     return results
 
@@ -67,13 +67,21 @@ def main_power_single_freq(freq, h_tx, h_rx, plot=False, export=False):
     crit_distances = crit_dist(freq, h_tx, h_rx)
     LOGGER.info("Critical distances: %s", crit_distances)
 
+    LOGGER.info("Numerical Example with dmin=20 and dmax=50")
+    _pr_min = to_decibel(rec_power(20, freq, h_tx, h_rx))
+    _pr_max = to_decibel(rec_power(50, freq, h_tx, h_rx))
+    _pr_d1 = to_decibel(rec_power(np.max(crit_distances), freq, h_tx, h_rx))
+    LOGGER.info(f"Power at dmin = {_pr_min:.1f}")
+    LOGGER.info(f"Power at dmax = {_pr_max:.1f}")
+    LOGGER.info(f"Power at d1 = {_pr_d1:.1f}")
+
     if plot:
         fig, axs = plt.subplots()
         axs.semilogx(distance, power_rx_db)
         axs.vlines(crit_distances, min(power_rx_db), max(power_rx_db),
                    colors='k', linestyles='dashed')
     if export:
-        LOGGER.info("Exporting single frequency power results.")
+        LOGGER.debug("Exporting single frequency power results.")
         export_results(results, f"power_single-{freq:E}-t{h_tx:.1f}-r{h_rx:.1f}.dat")
     return results
 

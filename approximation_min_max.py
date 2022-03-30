@@ -34,7 +34,9 @@ def find_peak_delta_freq(freq, distance, h_tx, h_rx, c=constants.c):
 
 
 def _main_delta_freq_peaks(freq, distance, h_tx, h_rx, c=constants.c):
-    delta_freq = np.logspace(7, 10, 3000)
+    #delta_freq = np.logspace(7, 10, 3000)
+    #delta_freq = np.logspace(7, np.log10(3e9), 3000)
+    delta_freq = np.logspace(7, 9, 1500)
     power_sum_lower = sum_power_lower_envelope(distance, delta_freq, freq, h_tx, h_rx)
     delta_freq_peak = find_peak_delta_freq(freq, distance, h_tx, h_rx)
     delta_freq_peak = np.array(delta_freq_peak)

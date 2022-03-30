@@ -32,8 +32,6 @@ def sum_power_lower_envelope(distance, delta_freq, freq,
     power_rx = power_tx/2 * (_part1 + _part2 + _part3)
     return power_rx
 
-
-
 def delta_freq_for_dist(d, h_tx=10, h_rx=2, c=constants.speed_of_light):
     _factor = c*np.pi/(np.sqrt(2)*h_rx*h_tx)
     _part_inner = np.sqrt((d**2+h_rx**2)**2 + 2*(d-h_rx)*(d+h_rx)*h_tx**2 + h_tx**4)
@@ -41,6 +39,12 @@ def delta_freq_for_dist(d, h_tx=10, h_rx=2, c=constants.speed_of_light):
     delta_omega = _factor*_part_outer
     delta_f = delta_omega/(2*np.pi)
     return delta_f
+
+def delta_freq_peak_approximation(distance, h_tx, h_rx, c=constants.c):
+    d_los = length_los(distance, h_tx, h_rx)
+    d_ref = length_ref(distance, h_tx, h_rx)
+    a = (d_ref-d_los)/c
+    return np.array([1, 2])/(2*a)
 
 
 def main_power_two_freq(freq, delta_freq, h_tx, h_rx,

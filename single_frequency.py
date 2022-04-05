@@ -60,20 +60,24 @@ def main_phi(freq, h_tx, h_rx, plot=False, export=False):
 
 
 def main_power_single_freq(freq, h_tx, h_rx, plot=False, export=False):
-    distance = np.logspace(0, 3, 1000)
+    distance = np.logspace(0, 3, 3000)
     power_rx = rec_power(distance, freq, h_tx, h_rx)
     power_rx_db = to_decibel(power_rx)
     results = {"distance": distance, "power": power_rx_db}
     crit_distances = crit_dist(freq, h_tx, h_rx)
     LOGGER.info("Critical distances: %s", crit_distances)
 
-    LOGGER.info("Numerical Example with dmin=20 and dmax=50")
-    _pr_min = to_decibel(rec_power(20, freq, h_tx, h_rx))
-    _pr_max = to_decibel(rec_power(50, freq, h_tx, h_rx))
-    _pr_d1 = to_decibel(rec_power(np.max(crit_distances), freq, h_tx, h_rx))
+    dmin = 30
+    dmax = 100
+    LOGGER.info(f"Numerical Example with dmin={dmin:.1f} and dmax={dmax:.1f}")
+    _crit_dist_interval = crit_distances[np.where(np.logical_and(crit_distances < dmax, crit_distances > dmin))]
+    LOGGER.info(f"Critical distances in [dmin, dmax]: {_crit_dist_interval}")
+    _pr_min = to_decibel(rec_power(dmin, freq, h_tx, h_rx))
+    _pr_max = to_decibel(rec_power(dmax, freq, h_tx, h_rx))
+    _pr_d1 = to_decibel(rec_power(np.max(_crit_dist_interval), freq, h_tx, h_rx))
     LOGGER.info(f"Power at dmin = {_pr_min:.1f}")
     LOGGER.info(f"Power at dmax = {_pr_max:.1f}")
-    LOGGER.info(f"Power at d1 = {_pr_d1:.1f}")
+    LOGGER.info(f"Power at max d_k = {_pr_d1:.1f}")
 
     if plot:
         fig, axs = plt.subplots()

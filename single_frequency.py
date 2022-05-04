@@ -45,6 +45,16 @@ def crit_dist(freq, h_tx, h_rx, c=constants.c, k=None):
     _d = np.real(_d)
     return _d
 
+def min_rec_power_single_freq(d_min: float, d_max: float, freq,
+                              h_tx, h_rx, c=constants.c):
+    _crit_dist = crit_dist(freq, h_tx, h_rx)
+    idx_dk_range = np.where(np.logical_and(_crit_dist>=d_min, _crit_dist<=d_max))
+    dk_worst = np.max(_crit_dist[idx_dk_range])
+    _pow_dmin = rec_power(d_min, freq, h_tx, h_rx)
+    _pow_dmax = rec_power(d_max, freq, h_tx, h_rx)
+    _pow_dk = rec_power(dk_worst, freq, h_tx, h_rx)
+    return np.min([_pow_dmin, _pow_dk, _pow_dmax])
+
 
 def main_phi(freq, h_tx, h_rx, plot=False, export=False):
     distance = np.logspace(0, 3, 1000)

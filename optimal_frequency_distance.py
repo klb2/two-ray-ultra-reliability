@@ -5,7 +5,7 @@ from scipy import constants
 from scipy import optimize
 import matplotlib.pyplot as plt
 
-from single_frequency import rec_power
+from single_frequency import rec_power, min_rec_power_single_freq
 from two_frequencies import sum_power_lower_envelope, delta_freq_peak_approximation
 from util import to_decibel, export_results
 
@@ -66,9 +66,12 @@ def main_optimal_frequency_distance(d_min: float, d_max: float, freq: float,
                                     c: float = constants.speed_of_light,
                                     plot=False, export=False):
 
-    distance = np.logspace(np.log10(d_min)-.1, np.log10(d_max)+.1, 2000)
+    distance = np.logspace(np.log10(d_min)-.1, np.log10(d_max)+.1, 3000)
     power_rx_single = rec_power(distance, freq, h_tx, h_rx)
     power_rx_single_db = to_decibel(power_rx_single)
+    min_power_single = min_rec_power_single_freq(d_min, d_max, freq, h_tx, h_rx)
+    min_power_single_db = to_decibel(min_power_single)
+    LOGGER.info(f"Minimum power single frequency: {min_power_single_db:.2f} dB")
 
     opt_df = find_optimal_delta_freq(d_min, d_max, freq, h_tx, h_rx, c)
     LOGGER.info(f"Optimal frequency spacing: {opt_df:E}")

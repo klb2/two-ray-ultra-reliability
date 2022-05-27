@@ -30,4 +30,5 @@ python3 optimal_frequency_distance.py -f "2.4e9" -t 10 -r 1.5 -dmin 10 -dmax 100
 echo "Figure 9"
 python3 rate_comparison.py -f "2.4e9" -t 10 -r 1.5 -bw "100e6" -dmin 10 -dmax 100 -v --plot --export
 
-#python3 outage_probability.py -f "2.4e9" -t 10 -r 1.5 -dmin 10 -dmax 100 -v --plot -n 10000000 --export
+echo "Figure 10"
+python3 outage_probability.py -f "2.4e9" -t 10 -r 1.5 -bw "100e6" -dmin 10 -dmax 100 -v --plot -n 10000000 --export

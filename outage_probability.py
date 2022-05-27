@@ -76,8 +76,8 @@ def main_outage_prob_rate(d_min, d_max, freq, h_tx, h_rx, bw, df: float = None,
     rates = {"singleActual": rate_single, "twoActual": rate_two,
              "twoLower": rate_two_lower}
     rates = {k: np.expand_dims(_p, 1) for k, _p in rates.items()}
-    threshold = np.logspace(3, 10, 2000)
-    LOGGER.debug("Estimate outage probabilities...")
+    threshold = np.logspace(4, 10, 2000)
+    LOGGER.debug("Estimate outage probabilities... (This might take a while...)")
     results = {k: np.count_nonzero(_rate < threshold, axis=0)/num_samples
                for k, _rate in rates.items()}
 

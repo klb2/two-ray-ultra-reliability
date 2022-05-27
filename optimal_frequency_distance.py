@@ -77,6 +77,9 @@ def main_optimal_frequency_distance(d_min: float, d_max: float, freq: float,
     LOGGER.info(f"Optimal frequency spacing: {opt_df:E}")
     power_rx_opt = sum_power_lower_envelope(distance, opt_df, freq, h_tx, h_rx)
     power_rx_opt_db = to_decibel(power_rx_opt)
+    min_power_two = sum_power_lower_envelope(d_max, opt_df, freq, h_tx, h_rx)
+    min_power_two_db = to_decibel(min_power_two)
+    LOGGER.info(f"Minimum power two frequencies: {min_power_two_db:.2f} dB")
 
     power_rx_opt_exact = .5*(power_rx_single + rec_power(distance, freq+opt_df, h_tx, h_rx))
     power_rx_opt_exact_db = to_decibel(power_rx_opt_exact)
@@ -111,7 +114,7 @@ if __name__ == "__main__":
                         help="Increase output verbosity")
     args = vars(parser.parse_args())
     verb = args.pop("verbosity")
-    logging.basicConfig(format="%(asctime)s - [%(levelname)8s]: %(message)s",
+    logging.basicConfig(format="%(asctime)s - %(module)s -- [%(levelname)8s]: %(message)s",
                         handlers=[
                             logging.FileHandler("main.log", encoding="utf-8"),
                             logging.StreamHandler()

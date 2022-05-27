@@ -129,7 +129,7 @@ if __name__ == "__main__":
                         help="Increase output verbosity")
     args = vars(parser.parse_args())
     verb = args.pop("verbosity")
-    logging.basicConfig(format="%(asctime)s - [%(levelname)8s]: %(message)s",
+    logging.basicConfig(format="%(asctime)s - %(module)s -- [%(levelname)8s]: %(message)s",
                         handlers=[
                             logging.FileHandler("main.log", encoding="utf-8"),
                             logging.StreamHandler()

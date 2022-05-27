@@ -13,61 +13,105 @@ from util import to_decibel, export_results, achievable_rate
 
 LOGGER = logging.getLogger(__name__)
 
-def main_rate_comparison(d_min: float, d_max: float, freq: float, 
-                         h_tx: float, h_rx: float, bw: float = None,
-                         df: float = None, c: float = constants.speed_of_light,
-                         noise_fig_db: float = 3, noise_den_db: float = -174,
-                         plot=False, export=False):
-    noise_fig = 10**(noise_fig_db/10.)
-    noise_den = 10**(noise_den_db/10.)
-
-    distance = np.logspace(np.log10(d_min)-.1, np.log10(d_max)+.1, 3000)
-    #distance = np.logspace(np.log10(d_min), np.log10(d_max), 10000)
-    #distance = np.logspace(np.floor(np.log10(d_min)), np.ceil(np.log10(d_max)), 3000)
-
-    power_rx_single = rec_power(distance, freq, h_tx, h_rx)
-    power_rx_single_db = to_decibel(power_rx_single)
-    _min_power_single = min_rec_power_single_freq(d_min, d_max, freq, h_tx, h_rx)
-
-    if df is None:
-        df = find_optimal_delta_freq(d_min, d_max, freq, h_tx, h_rx, c)
-    LOGGER.info(f"Frequency spacing: {df:E}")
-    power_rx_second = rec_power(distance, freq+df, h_tx, h_rx)
-    power_rx_sum_lower = sum_power_lower_envelope(distance, df, freq, h_tx, h_rx)
-    _w1 = 2*np.pi*freq
-    _w2 = 2*np.pi*(freq+df)
-    _power_offset_two = 1./(2*_w1*_w2)**2 * (c/4)**4 * (1/length_los(d_max, h_tx, h_rx) - 1/length_ref(d_max, h_tx, h_rx))**4
-    _min_power_two_lower = sum_power_lower_envelope(d_max, df, freq, h_tx, h_rx)
-
-    if bw is None:
-        bw = df/2
-    alpha = _power_offset_two/(noise_fig*noise_den*bw/2) # no square here!
-    LOGGER.debug(f"Offset power due to product: {to_decibel(alpha):.2f} dB")
-
-    rate_single = achievable_rate(power_rx_single, bw=bw,
+def rate_single_freq(distance, freq, h_tx: float, h_rx: float, bw: float,
+                     noise_fig_db: float = 3, noise_den_db: float = -174):
+    power_rx = rec_power(distance, freq, h_tx, h_rx)
+    rate_single = achievable_rate(power_rx, bw=bw,
                                   noise_fig_db=noise_fig_db,
                                   noise_den_db=noise_den_db)
+    return rate_single
 
-    rate_two = (achievable_rate(0.5*power_rx_single, bw=bw/2,
+def rate_two_freq(distance, freq, delta_freq, h_tx: float, h_rx: float,
+                  bw: float, noise_fig_db: float = 3,
+                  noise_den_db: float = -174):
+    power_rx_first = rec_power(distance, freq, h_tx, h_rx)
+    power_rx_second = rec_power(distance, freq+delta_freq, h_tx, h_rx)
+    rate_two = (achievable_rate(0.5*power_rx_first, bw=bw/2,
                                 noise_fig_db=noise_fig_db,
                                 noise_den_db=noise_den_db) +
                 achievable_rate(0.5*power_rx_second, bw=bw/2,
                                 noise_fig_db=noise_fig_db,
                                 noise_den_db=noise_den_db))
-    rate_two_lower = achievable_rate(power_rx_sum_lower+alpha,
+    return rate_two
+
+def rate_two_freq_lower(distance, freq, delta_freq, h_tx: float, h_rx: float,
+                        bw: float, d_max: float = np.infty,
+                        noise_fig_db: float = 3, noise_den_db: float = -174):
+    power_rx_sum_lower = sum_power_lower_envelope(distance, delta_freq, freq,
+                                                  h_tx, h_rx)
+    if d_max == np.infty:
+        normed_alpha = 0.
+    else:
+        normed_alpha = normed_alpha_power_offset(d_max, freq, delta_freq, 
+                                                 h_tx, h_rx, bw,
+                                                 noise_fig_db=noise_fig_db,
+                                                 noise_den_db=noise_den_db)
+    rate_two_lower = achievable_rate(power_rx_sum_lower+normed_alpha,
                                      bw=bw/2, noise_fig_db=noise_fig_db,
                                      noise_den_db=noise_den_db)
+    return rate_two_lower
+
+def normed_alpha_power_offset(d_max, freq, delta_freq, h_tx: float, h_rx: float,
+                              bw: float, noise_fig_db: float = 3,
+                              noise_den_db: float = -174,
+                              c: float = constants.speed_of_light):
+    noise_fig = 10**(noise_fig_db/10.)
+    noise_den = 10**(noise_den_db/10.)
+    w1 = 2*np.pi*freq
+    w2 = 2*np.pi*(freq+delta_freq)
+    power_offset_two = 1./(2*w1*w2)**2 * (c/4)**4 * (1/length_los(d_max, h_tx, h_rx) - 1/length_ref(d_max, h_tx, h_rx))**4
+    alpha = power_offset_two/(noise_fig*noise_den*bw/2) # no square here!
+    LOGGER.debug(f"Offset power due to product: {to_decibel(alpha):.2f} dB")
+    return alpha
+            
+
+def main_rate_comparison(d_min: float, d_max: float, freq: float, 
+                         h_tx: float, h_rx: float, bw: float = None,
+                         df: float = None, c: float = constants.speed_of_light,
+                         noise_fig_db: float = 3, noise_den_db: float = -174,
+                         plot=False, export=False):
+
+    distance = np.logspace(np.log10(d_min)-.1, np.log10(d_max)+.1, 3000)
+    #distance = np.logspace(np.log10(d_min), np.log10(d_max), 10000)
+    #distance = np.logspace(np.floor(np.log10(d_min)), np.ceil(np.log10(d_max)), 3000)
+
+    _min_power_single = min_rec_power_single_freq(d_min, d_max, freq, h_tx, h_rx)
+
+    if df is None:
+        df = find_optimal_delta_freq(d_min, d_max, freq, h_tx, h_rx, c)
+    LOGGER.info(f"Frequency spacing: {df:E}")
+
+    if bw is None:
+        bw = df/2
+    LOGGER.info(f"Bandwidth (single freq band): {bw:E}")
+
+
+    rate_single = rate_single_freq(distance, freq, h_tx, h_rx, bw=bw,
+                                   noise_fig_db=noise_fig_db,
+                                   noise_den_db=noise_den_db)
+
+    rate_two = rate_two_freq(distance, freq, df, h_tx, h_rx, bw=bw,
+                             noise_fig_db=noise_fig_db,
+                             noise_den_db=noise_den_db)
+
+    rate_two_lower =  rate_two_freq_lower(distance, freq, df, h_tx, h_rx,
+                                          d_max=d_max, bw=bw,
+                                          noise_fig_db=noise_fig_db,
+                                          noise_den_db=noise_den_db)
+
     results = {"distance": distance, "rateSingle": rate_single,
                "rateTwo": rate_two, "rateTwoLower": rate_two_lower}
 
-    _min_rate_single = achievable_rate(_min_power_single, bw=bw,
-                                       noise_fig_db=noise_fig_db,
-                                       noise_den_db=noise_den_db)
-    _min_rate_two_lower = achievable_rate(_min_power_two_lower+alpha, bw=bw/2,
-                                          noise_fig_db=noise_fig_db,
-                                          noise_den_db=noise_den_db)
-    LOGGER.info(f"Minimum Rate (One Freq.): {_min_rate_single:E}")
-    LOGGER.info(f"Minimum Rate (Two Freq.): {_min_rate_two_lower:E}")
+    #power_rx_second = rec_power(distance, freq+df, h_tx, h_rx)
+    #_min_power_two_lower = sum_power_lower_envelope(d_max, df, freq, h_tx, h_rx)
+    #_min_rate_single = achievable_rate(_min_power_single, bw=bw,
+    #                                   noise_fig_db=noise_fig_db,
+    #                                   noise_den_db=noise_den_db)
+    #_min_rate_two_lower = achievable_rate(_min_power_two_lower+alpha, bw=bw/2,
+    #                                      noise_fig_db=noise_fig_db,
+    #                                      noise_den_db=noise_den_db)
+    #LOGGER.info(f"Minimum Rate (One Freq.): {_min_rate_single:E}")
+    #LOGGER.info(f"Minimum Rate (Two Freq.): {_min_rate_two_lower:E}")
 
     if plot:
         fig, axs = plt.subplots()

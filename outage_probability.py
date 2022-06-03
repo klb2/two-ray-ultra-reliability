@@ -47,6 +47,16 @@ def main_outage_prob_power(d_min, d_max, freq, h_tx, h_rx, c=constants.c,
         export_results(results, f"out_prob-{freq:E}-dmin{d_min:.1f}-dmax{d_max:.1f}-t{h_tx:.1f}-r{h_rx:.1f}.dat")
     return results
 
+def outage_prob_mc(rates, threshold=None):
+    if threshold is None:
+        threshold = np.logspace(4, 10, 2000)
+    rates = {k: np.expand_dims(_p, 1) for k, _p in rates.items()}
+    LOGGER.debug("Estimate outage probabilities... (This might take a while...)")
+    #results = {k: np.count_nonzero(_rate < threshold, axis=0)/num_samples
+    results = {k: np.count_nonzero(_rate < threshold, axis=0)/len(_rate)
+               for k, _rate in rates.items()}
+    return results
+
 def main_outage_prob_rate(d_min, d_max, freq, h_tx, h_rx, bw, df: float = None,
                           noise_fig_db: float = 3, noise_den_db: float = -174,
                           c=constants.c, num_samples=100000,
@@ -54,32 +64,13 @@ def main_outage_prob_rate(d_min, d_max, freq, h_tx, h_rx, bw, df: float = None,
     LOGGER.info(f"Simulating outage probability with parameters: f1={freq:E}, h_tx={h_tx:.1f}, h_rx={h_rx:.1f}, dmin={d_min:.1f}, dmax={d_max:.1f}")
     LOGGER.info(f"Number of samples: {num_samples:E}")
     distance = (d_max-d_min)*np.random.rand(num_samples) + d_min
-
-    LOGGER.debug("Work on single frequency scenario...")
-    rate_single = rate_single_freq(distance, freq, h_tx, h_rx, bw,
-                                   noise_fig_db=noise_fig_db,
-                                   noise_den_db=noise_den_db)
-    
     if df is None:
         df = find_optimal_delta_freq(d_min, d_max, freq, h_tx, h_rx)
-    LOGGER.info(f"Frequency spacing: {df:E}")
-    LOGGER.debug("Work on two frequency scenario...")
-    rate_two = rate_two_freq(distance, freq, df, h_tx, h_rx, bw,
-                             noise_fig_db=noise_fig_db,
-                             noise_den_db=noise_den_db)
-    LOGGER.debug("Work on two frequency scenario (lower bound)...")
-    rate_two_lower =  rate_two_freq_lower(distance, freq, df, h_tx, h_rx,
-                                          bw=bw, d_max=d_max,
-                                          noise_fig_db=noise_fig_db,
-                                          noise_den_db=noise_den_db)
 
-    rates = {"singleActual": rate_single, "twoActual": rate_two,
-             "twoLower": rate_two_lower}
-    rates = {k: np.expand_dims(_p, 1) for k, _p in rates.items()}
     threshold = np.logspace(4, 10, 2000)
-    LOGGER.debug("Estimate outage probabilities... (This might take a while...)")
-    results = {k: np.count_nonzero(_rate < threshold, axis=0)/num_samples
-               for k, _rate in rates.items()}
+    results = _main_outage_prob_rate_mc(distance, d_max, freq, h_tx, h_rx, bw,
+                                        df, threshold, noise_fig_db,
+                                        noise_den_db)
 
     if plot:
         fig, axs = plt.subplots()
@@ -94,6 +85,32 @@ def main_outage_prob_rate(d_min, d_max, freq, h_tx, h_rx, bw, df: float = None,
         LOGGER.info("Exporting results.")
         export_results(results, f"out_prob_rate-{freq:E}-dmin{d_min:.1f}-dmax{d_max:.1f}-t{h_tx:.1f}-r{h_rx:.1f}-bw{bw:E}.dat")
     return results
+
+def _main_outage_prob_rate_mc(distance, d_max, freq, h_tx, h_rx, bw, df,
+                              threshold=None, noise_fig_db: float = 3,
+                              noise_den_db: float = -174,
+                              c=constants.c):
+    LOGGER.debug("Work on single frequency scenario...")
+    rate_single = rate_single_freq(distance, freq, h_tx, h_rx, bw,
+                                   noise_fig_db=noise_fig_db,
+                                   noise_den_db=noise_den_db)
+    
+    LOGGER.info(f"Frequency spacing: {df:E}")
+    LOGGER.debug("Work on two frequency scenario...")
+    rate_two = rate_two_freq(distance, freq, df, h_tx, h_rx, bw,
+                             noise_fig_db=noise_fig_db,
+                             noise_den_db=noise_den_db)
+    LOGGER.debug("Work on two frequency scenario (lower bound)...")
+    rate_two_lower =  rate_two_freq_lower(distance, freq, df, h_tx, h_rx,
+                                          bw=bw, d_max=d_max,
+                                          noise_fig_db=noise_fig_db,
+                                          noise_den_db=noise_den_db)
+
+    rates = {"singleActual": rate_single, "twoActual": rate_two,
+             "twoLower": rate_two_lower}
+    results = outage_prob_mc(rates, threshold)
+    return results
+
 
 if __name__ == "__main__":
     import argparse

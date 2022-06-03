@@ -32,3 +32,6 @@ python3 rate_comparison.py -f "2.4e9" -t 10 -r 1.5 -bw "100e6" -dmin 10 -dmax 10
 
 echo "Figure 10"
 python3 outage_probability.py -f "2.4e9" -t 10 -r 1.5 -bw "100e6" -dmin 10 -dmax 100 -v --plot -n 10000000 --export
+
+echo "Figure XX"
+python3 uav_example.py -f "2.4e9" -bw "100e6" -t 10 -r 3 --radius 150 -vv -n 200 --plot --export

@@ -13,6 +13,7 @@ LOGGER = logging.getLogger(__name__)
 def main(freq, h_tx, h_rx, bw, df: float = None, radius=150, d_lake=30,
          noise_fig_db: float = 3, noise_den_db: float = -174,
          num_runs=1000, num_steps=2000, plot=False, export=False):
+    pos_tx = (radius+d_lake)*np.exp(1j*np.pi/4)
     d_min = d_lake
     d_max = d_lake + 2*radius
     LOGGER.info(f"Distance is within [{d_min:.2f}, {d_max:.2f}] meter")
@@ -27,10 +28,10 @@ def main(freq, h_tx, h_rx, bw, df: float = None, radius=150, d_lake=30,
     _count = 0
     while len(distance) < num_runs*num_steps:
         positions = get_uav_positions(a, b, timeline)
-        if (np.any(np.abs(positions["x"]) > radius) or
-            np.any(np.abs(positions["y"] > radius))):
+        _positions = positions["x"] + 1j*positions["y"]
+        if np.any(np.abs(_positions) > radius):
             continue
-        _distances = np.abs(positions["x"]+30 + 1j*positions["y"])
+        _distances = np.abs(_positions - pos_tx)
         distance = np.append(distance, _distances)
         _count = _count + 1
         LOGGER.debug(f"Completed run {_count:d}/{num_runs:d}")
@@ -48,6 +49,8 @@ def main(freq, h_tx, h_rx, bw, df: float = None, radius=150, d_lake=30,
         for i in range(len(timeline)-1):
             axs.plot(positions['x'][i:i+2], positions['y'][i:i+2],
                      color=plt.cm.get_cmap("hot")(positions['c'][i]))
+        axs.add_patch(plt.Circle((0, 0), radius=radius, alpha=.5))
+        axs.plot(pos_tx.real, pos_tx.imag, 'ok')
         fig2, axs2 = plt.subplots()
         for _name, _prob in results.items():
             axs2.loglog(threshold, _prob, label=_name)

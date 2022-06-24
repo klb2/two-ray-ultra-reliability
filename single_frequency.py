@@ -31,6 +31,18 @@ def rec_power(distance, freq, h_tx, h_rx, G_los=1, G_ref=1, c=constants.c,
     power_rx = _factor*(_part1+_part2+_part3)
     return power_rx
 
+def rec_power_lower_envelope(distance, freq, h_tx, h_rx, G_los=1, G_ref=1,
+                             c=constants.c, power_tx=1):
+    d_los = length_los(distance, h_tx, h_rx)
+    d_ref = length_ref(distance, h_tx, h_rx)
+    omega = 2*np.pi*freq
+    _factor = power_tx*(c/(2*omega))**2
+    _part1 = G_los/(d_los**2)
+    _part2 = G_ref/(d_ref**2)
+    _part3 = -2*np.sqrt(G_los*G_ref)/(d_los*d_ref)
+    power_rx = _factor*(_part1+_part2+_part3)
+    return power_rx
+
 def crit_dist(freq, h_tx, h_rx, c=constants.c, k=None):
     a = h_tx - h_rx
     b = h_tx + h_rx

@@ -8,7 +8,7 @@ The idea is to give an interactive version of the calculations and presented
 concepts to the reader. One can also change different parameters and explore
 different behaviors on their own.
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/klb2%2Ftwo-ray-ultra-reliability)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/klb2/two-ray-ultra-reliability/HEAD)
 
 
 ## File List
@@ -36,7 +36,7 @@ The following files are provided in this repository:
 ### Running it online
 The easiest way is to use services like [Binder](https://mybinder.org/) to run
 the notebook online. Simply navigate to
-[https://mybinder.org/v2/gh/klb2%2Ftwo-ray-ultra-reliability](https://mybinder.org/v2/gh/klb2%2Ftwo-ray-ultra-reliability)
+[https://mybinder.org/v2/gh/klb2/two-ray-ultra-reliability/HEAD](https://mybinder.org/v2/gh/klb2/two-ray-ultra-reliability/HEAD)
 to run the notebooks in your browser without setting everything up locally.
 
 ### Local Installation

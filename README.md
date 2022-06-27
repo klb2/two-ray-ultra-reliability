@@ -15,6 +15,8 @@ different behaviors on their own.
 The following files are provided in this repository:
 
 - `run.sh`: Bash script that reproduces the figures presented in the paper.
+- `Ultra-Reliability Two-Ray Ground Reflection.ipynb`: Jupyter notebook that
+  contains interactive plots of most of the results shown in the paper.
 - `util.py`: Python module that contains utility functions, e.g., for saving results.
 - `model.py`: Python module that contains utility functions around the two-ray
   ground reflection model.
@@ -22,6 +24,8 @@ The following files are provided in this repository:
   the receive power when a single frequency is used.
 - `two_frequencies.py`: Python module that contains the functions to calculate
   the receive power when two frequencies are used in parallel.
+- `optimal_frequency_distance.py`: Python module that contains the algorithm to
+  calculate the optimal frequency spacing for worst-case design.
 - `rate_comparison.py`: Python module that contains the functions to calculate
   the achievable rates for the different scenarios.
 - `outage_probability.py`: Python module that contains the functions to

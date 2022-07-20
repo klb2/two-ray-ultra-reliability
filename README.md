@@ -2,7 +2,8 @@
 
 This repository is accompanying the paper "A Simple Frequency Diversity Scheme
 for Ultra-Reliable Communications in Ground Reflection Scenarios" (K.-L.
-Besser, E. Jorswieck, J. Coon, 2022).
+Besser, E. Jorswieck, J. Coon, Jun. 2022,
+[arXiv:2206.13459](https://arxiv.org/abs/2206.13459)).
 
 The idea is to give an interactive version of the calculations and presented
 concepts to the reader. One can also change different parameters and explore

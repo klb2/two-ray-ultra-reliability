@@ -1,10 +1,10 @@
 #!/bin/sh
 
-# ...
-# Information about the paper...
-# ...
+# This repository is accompanying the paper "A Simple Frequency Diversity Scheme
+# for Ultra-Reliable Communications in Ground Reflection Scenarios" (K.-L.
+# Besser, E. Jorswieck, J. Coon, Jun. 2022, arXiv:2206.13459)
 #
-# Copyright (C) 20XX ...
+# Copyright (C) 2022
 # License: GPLv3
 
 echo "Figures 2 and 3"

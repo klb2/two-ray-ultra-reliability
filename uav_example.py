@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import sdeint
 
 from optimal_frequency_distance import find_optimal_delta_freq
-from outage_probability import _main_outage_prob_rate_mc
+from outage_probability import _generate_rate_rv
 from util import export_results
 
 LOGGER = logging.getLogger(__name__)
@@ -38,11 +38,11 @@ def main(freq, h_tx, h_rx, bw, df: float = None, radius=150, d_lake=30,
     LOGGER.info(f"Completed all {num_runs:d} runs with {num_steps:d} time samples each.")
 
     LOGGER.debug("Estimate outage probabilities... (This might take a while...)")
+    rate_rv = _generate_rate_rv(distance, d_max, freq, h_tx, h_rx, bw, df,
+                                noise_fig_db, noise_den_db)
     #threshold = np.logspace(3, 9, 2000)
     threshold = np.logspace(1, 7, 2000)
-    results = _main_outage_prob_rate_mc(distance, d_max, freq, h_tx, h_rx, bw,
-                                        df, threshold, noise_fig_db,
-                                        noise_den_db)
+    results = {k: v.cdf(threshold) for k, v in rate_rv.items()}
 
 
     if plot:

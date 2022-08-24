@@ -2,6 +2,7 @@ import logging
 
 import numpy as np
 from scipy import constants
+from scipy import stats
 import matplotlib.pyplot as plt
 
 from single_frequency import rec_power
@@ -12,40 +13,6 @@ from util import export_results, to_decibel
 
 
 LOGGER = logging.getLogger(__name__)
-
-def main_outage_prob_power(d_min, d_max, freq, h_tx, h_rx, c=constants.c,
-                     num_samples=100000, plot=False, export=False, **kwargs):
-    LOGGER.info(f"Simulating outage probability with parameters: f1={freq:E}, h_tx={h_tx:.1f}, h_rx={h_rx:.1f}, dmin={d_min:.1f}, dmax={d_max:.1f}")
-    LOGGER.info(f"Number of samples: {num_samples:E}")
-    distance = (d_max-d_min)*np.random.rand(num_samples) + d_min
-    pow_single_freq = rec_power(distance, freq, h_tx, h_rx)
-    pow_single_bound = sum_power_lower_envelope(distance, 0., freq, h_tx, h_rx)
-    
-    opt_df = find_optimal_delta_freq(d_min, d_max, freq, h_tx, h_rx)
-    LOGGER.info(f"Optimal frequency spacing: {opt_df:E}")
-    pow_two_freq = .5*(rec_power(distance, freq, h_tx, h_rx)+rec_power(distance, freq+opt_df, h_tx, h_rx))
-    pow_two_bound = sum_power_lower_envelope(distance, opt_df, freq, h_tx, h_rx)
-
-    powers = {"singleActual": pow_single_freq, "singleBound": pow_single_bound,
-              "twoActual": pow_two_freq, "twoBound": pow_two_bound}
-    powers = {k: np.expand_dims(to_decibel(_p), 1) for k, _p in powers.items()}
-    sensitivity = np.linspace(-120, -60, 1000)
-    results = {k: np.count_nonzero(_pow < sensitivity, axis=0)/num_samples
-                for k, _pow in powers.items()}
-
-    if plot:
-        fig, axs = plt.subplots()
-        for _name, _prob in results.items():
-            axs.semilogy(sensitivity, _prob, label=_name)
-        axs.set_xlabel("Receiver Sensitivity [dB]")
-        axs.set_ylabel("Outage Probability")
-        axs.legend()
-
-    results['sensitivity'] = sensitivity
-    if export:
-        LOGGER.info("Exporting results.")
-        export_results(results, f"out_prob-{freq:E}-dmin{d_min:.1f}-dmax{d_max:.1f}-t{h_tx:.1f}-r{h_rx:.1f}.dat")
-    return results
 
 def outage_prob_mc(rates, threshold=None):
     if threshold is None:
@@ -67,10 +34,10 @@ def main_outage_prob_rate(d_min, d_max, freq, h_tx, h_rx, bw, df: float = None,
     if df is None:
         df = find_optimal_delta_freq(d_min, d_max, freq, h_tx, h_rx)
 
+    rate_rv = _generate_rate_rv(distance, d_max, freq, h_tx, h_rx, bw, df,
+                                noise_fig_db, noise_den_db)
     threshold = np.logspace(4, 10, 2000)
-    results = _main_outage_prob_rate_mc(distance, d_max, freq, h_tx, h_rx, bw,
-                                        df, threshold, noise_fig_db,
-                                        noise_den_db)
+    results = {k: v.cdf(threshold) for k, v in rate_rv.items()}
 
     if plot:
         fig, axs = plt.subplots()
@@ -86,10 +53,9 @@ def main_outage_prob_rate(d_min, d_max, freq, h_tx, h_rx, bw, df: float = None,
         export_results(results, f"out_prob_rate-{freq:E}-dmin{d_min:.1f}-dmax{d_max:.1f}-t{h_tx:.1f}-r{h_rx:.1f}-bw{bw:E}.dat")
     return results
 
-def _main_outage_prob_rate_mc(distance, d_max, freq, h_tx, h_rx, bw, df,
-                              threshold=None, noise_fig_db: float = 3,
-                              noise_den_db: float = -174,
-                              c=constants.c):
+def _generate_rate_rv(distance, d_max, freq, h_tx, h_rx, bw, df,
+                      noise_fig_db: float = 3, noise_den_db: float = -174,
+                      c=constants.c):
     LOGGER.debug("Work on single frequency scenario...")
     rate_single = rate_single_freq(distance, freq, h_tx, h_rx, bw,
                                    noise_fig_db=noise_fig_db,
@@ -108,8 +74,11 @@ def _main_outage_prob_rate_mc(distance, d_max, freq, h_tx, h_rx, bw, df,
 
     rates = {"singleActual": rate_single, "twoActual": rate_two,
              "twoLower": rate_two_lower}
-    results = outage_prob_mc(rates, threshold)
-    return results
+    rates_hist = {k: np.histogram(v) for k, v in rates.items()}
+    rates_rv = {k: stats.rv_histogram(v) for k, v in rates_hist.items()}
+    return rates_rv
+    #results = outage_prob_mc(rates, threshold)
+    #return results
 
 
 if __name__ == "__main__":

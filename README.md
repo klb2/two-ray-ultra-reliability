@@ -82,3 +82,17 @@ Grant 16KISK020K and by the EPSRC under grant number EP/T02612X/1.
 This program is licensed under the GPLv3 license. If you in any way use this
 code for research that results in publications, please cite our original
 article listed above.
+
+You can use the following BibTeX entry
+```bibtex
+@article{Besser2022tworay,
+  title = {A Simple Frequency Diversity Scheme for Ultra-Reliable Communications in Ground Reflection Scenarios},
+  author = {Besser, Karl-Ludwig and Jorswieck, Eduard A. and Coon, Justin P.},
+  year = {2022},
+  month = {6},
+  journal = {Submitted for publication},
+  archiveprefix = {arXiv},
+  eprint = {2206.13459},
+  primaryClass = {cs.IT},
+}
+```

@@ -1,11 +1,13 @@
 import logging
 
 import numpy as np
+from scipy import stats
 import matplotlib.pyplot as plt
 import sdeint
 
 from optimal_frequency_distance import find_optimal_delta_freq
 from outage_probability import _generate_rate_rv
+from rate_comparison import rate_two_freq_lower
 from util import export_results
 
 LOGGER = logging.getLogger(__name__)
@@ -40,6 +42,15 @@ def main(freq, h_tx, h_rx, bw, df: float = None, radius=150, d_lake=30,
     LOGGER.debug("Estimate outage probabilities... (This might take a while...)")
     rate_rv = _generate_rate_rv(distance, d_max, freq, h_tx, h_rx, bw, df,
                                 noise_fig_db, noise_den_db)
+    df_comparison = 100e6
+    #df_comparison = 50e6
+    rate_two_comparison = rate_two_freq_lower(distance, freq, df_comparison,
+                                              h_tx, h_rx, bw=bw, d_max=d_max,
+                                              noise_fig_db=noise_fig_db,
+                                              noise_den_db=noise_den_db)
+    _hist_two_comparison = np.histogram(rate_two_comparison)
+    rate_rv["twoComparison"] = stats.rv_histogram(_hist_two_comparison)
+
     #threshold = np.logspace(3, 9, 2000)
     threshold = np.logspace(1, 7, 2000)
     results = {k: v.cdf(threshold) for k, v in rate_rv.items()}
@@ -49,7 +60,7 @@ def main(freq, h_tx, h_rx, bw, df: float = None, radius=150, d_lake=30,
         fig, axs = plt.subplots()
         for i in range(len(timeline)-1):
             axs.plot(positions['x'][i:i+2], positions['y'][i:i+2],
-                     color=plt.cm.get_cmap("hot")(positions['c'][i]))
+                     color=plt.colormaps.get_cmap("hot")(positions['c'][i]))
         axs.add_patch(plt.Circle((0, 0), radius=radius, alpha=.5))
         axs.plot(pos_tx.real, pos_tx.imag, 'ok')
         fig2, axs2 = plt.subplots()

@@ -67,10 +67,10 @@ def _generate_rate_rv(distance, d_max, freq, h_tx, h_rx, bw, df,
                              noise_fig_db=noise_fig_db,
                              noise_den_db=noise_den_db)
     LOGGER.debug("Work on two frequency scenario (lower bound)...")
-    rate_two_lower =  rate_two_freq_lower(distance, freq, df, h_tx, h_rx,
-                                          bw=bw, d_max=d_max,
-                                          noise_fig_db=noise_fig_db,
-                                          noise_den_db=noise_den_db)
+    rate_two_lower = rate_two_freq_lower(distance, freq, df, h_tx, h_rx,
+                                         bw=bw, d_max=d_max,
+                                         noise_fig_db=noise_fig_db,
+                                         noise_den_db=noise_den_db)
 
     rates = {"singleActual": rate_single, "twoActual": rate_two,
              "twoLower": rate_two_lower}

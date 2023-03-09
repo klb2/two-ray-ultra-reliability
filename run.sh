@@ -34,4 +34,4 @@ echo "Figure 10"
 python3 outage_probability.py -f "2.4e9" -t 10 -r 1.5 -bw "100e3" -dmin 10 -dmax 100 -v --plot -n 10000000 --export
 
 echo "Figures 11 and 12"
-python3 uav_example.py -f "2.4e9" -bw "100e3" -t 10 -r 3 --radius 150 -vv -n 1000 --plot --export
+python3 uav_example.py -f "28e9" -bw "100e3" -t 10 -r 3 --radius 150 -vv -n 1000 --plot --export
